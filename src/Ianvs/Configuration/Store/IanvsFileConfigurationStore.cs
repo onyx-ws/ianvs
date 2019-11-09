@@ -1,4 +1,5 @@
-﻿using Onyx.Ianvs.Configuration.Json;
+﻿using Onyx.Ianvs.Common;
+using Onyx.Ianvs.Configuration.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,6 +27,15 @@ namespace Onyx.Ianvs.Configuration.Store
         public List<Endpoint> Endpoints
         {
             get { return ianvsConfiguration.Endpoints; }
+            set { }
+        }
+
+        /// <summary>
+        /// List of backend servers configured
+        /// </summary>
+        public List<Server> Servers
+        {
+            get { return ianvsConfiguration.Servers; }
             set { }
         }
 

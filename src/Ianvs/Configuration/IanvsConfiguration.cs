@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Onyx.Ianvs.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,5 +17,10 @@ namespace Onyx.Ianvs.Configuration
         /// List of service endpoints configured
         /// </summary>
         public List<Endpoint> Endpoints { get; set; }
+
+        /// <summary>
+        /// List of backend servers configured
+        /// </summary>
+        public List<Server> Servers { get; set; }
     }
 }

@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Ianvs = Onyx.Ianvs.Configuration;
-using Onyx.Ianvs.Configuration.Store;
+using Ianvs = Onyx.Ianvs.Common;
+using Onyx.Ianvs.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Onyx.Ianvs.Http;
+using Onyx.Ianvs.Configuration.Store;
 
 namespace Onyx.Ianvs.Routing
 {
@@ -18,7 +18,7 @@ namespace Onyx.Ianvs.Routing
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, IanvsContext ianvsContext,
+        public async Task InvokeAsync(HttpContext httpContext, Ianvs::IanvsContext ianvsContext,
             IIanvsConfigurationStore ianvsConfiguration)
         {
             // TODO: Implement Routing
@@ -27,7 +27,7 @@ namespace Onyx.Ianvs.Routing
             // https://github.com/onyx-ws/ianvs/issues/2
 
             // Find a matching Path
-            string requestPath = context.Request.Path;
+            string requestPath = httpContext.Request.Path;
             Ianvs::Endpoint matchedEndpoint = ianvsConfiguration.Endpoints.FirstOrDefault(
                 endpoint =>
                     requestPath == (!string.IsNullOrWhiteSpace(endpoint.IanvsUrl) ? endpoint.IanvsUrl : endpoint.Url)
@@ -36,13 +36,13 @@ namespace Onyx.Ianvs.Routing
             {
                 // Path not found
                 // Return 404 - Not Found (https://tools.ietf.org/html/rfc7231#section-6.5.4)
-                await context.Response.WriteNotFoundResponseAsync();
+                await httpContext.Response.WriteNotFoundResponseAsync();
             }
             else
             {
                 ianvsContext.MatchedEndpoint = matchedEndpoint;
                 // Path found - Match Operation
-                string requestMethod = context.Request.Method;
+                string requestMethod = httpContext.Request.Method;
                 Ianvs::Operation matchedOperation = matchedEndpoint.Operations.FirstOrDefault(
                     operation => 
                         operation.Method.Equals(requestMethod, StringComparison.InvariantCultureIgnoreCase)
@@ -51,7 +51,7 @@ namespace Onyx.Ianvs.Routing
                 {
                     // Operation not found
                     // Return 405 - Method Not Allowed (https://tools.ietf.org/html/rfc7231#section-6.5.5)
-                    await context.Response.WriteMethodNotAllowedResponseAsync();
+                    await httpContext.Response.WriteMethodNotAllowedResponseAsync();
                 }
                 else
                 {
@@ -59,8 +59,7 @@ namespace Onyx.Ianvs.Routing
                     // Simulate operation
                     ianvsContext.MatchedOperation = matchedOperation;
 
-                    await _next(context);
-                    await context.Response.WriteAsync("This is Ianvs!");
+                    await _next(httpContext);
                 }
             }
         }
