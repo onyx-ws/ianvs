@@ -1,0 +1,47 @@
+{
+  "x-ianvs": "0.0.1",
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Sample Ianvs config file",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/get": {
+      "x-ianvs-endpoint": "/echo",
+      "get": {
+        "tags": [
+          "onyx",
+          "ianvs"
+        ],
+        "summary": "Test operation",
+        "description": "Simulates a GET operation and echoes back request details in the response body",
+        "operationId": "getEcho",
+        "responses": {
+          "200": {
+            "description": "Ping reply",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "reply-1": {
+                    "summary": "Hello World Example",
+                    "value": "{ \"message\": \"Hello World Coded!\" }"
+                  },
+                  "reply-2": {
+                    "summary": "Hello World Example",
+                    "externalValue": "https://raw.githubusercontent.com/onyx-ws/tanuki/master/src/Tanuki/tanuki.json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "servers": [
+          {
+            "url": "https://httpbin.org",
+            "description": "httpbin server"
+          }
+        ]
+      }
+    }
+  }
+}
