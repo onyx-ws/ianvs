@@ -33,6 +33,10 @@ namespace Onyx.Ianvs.Dispatch
                         if(ianvsContext.Variables.TryGetValue($"{{request.query.{parameter.Name}}}", out string value)){
                             targetUrl += $"{parameter.Name}={value}&";
                         }
+                        else if (parameter.Default != null)
+                        {
+                            targetUrl += $"{parameter.Name}={parameter.Default}&";
+                        }
                     }
                 }
                 // Remove last character - either ? or &

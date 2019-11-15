@@ -11,5 +11,6 @@ namespace Onyx.Ianvs.Common
         public string In { get; set; }
         public string To { get; set; }
         public string Description { get; set; }
+        public string Default { get; set; }
     }
 }

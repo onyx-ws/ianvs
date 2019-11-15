@@ -33,6 +33,7 @@ namespace Onyx.Ianvs.Configuration.Json
                 if (property.Name == "in") paramters.In = property.Value.GetString();
                 if (property.Name == "x-to") paramters.To = property.Value.GetString();
                 if (property.Name == "description") paramters.Description = property.Value.GetString();
+                if (property.Name == "x-default") paramters.Default = property.Value.GetString();
             }
             return paramters;
         }

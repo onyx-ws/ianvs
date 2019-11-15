@@ -22,6 +22,12 @@
             "in": "query",
             "x-to": "query",
             "description": "Sample query param to be forwarded"
+          },
+          {
+            "name": "me",
+            "in": "query",
+            "description": "Sample query param to be forwarded",
+            "x-default": "test"
           }
         ],
         "responses": {
