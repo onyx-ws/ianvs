@@ -45,7 +45,7 @@ namespace Onyx.Ianvs.LoadBalancing
                 ianvsContext.TargetServer = await loadBalancer.Next(ianvsConfiguration.Servers);
             }
 
-            ianvsContext.DownstreamUrl = ianvsContext.TargetServer.Url + ianvsContext.MatchedEndpoint.Url;
+            ianvsContext.TargetUrl = ianvsContext.TargetServer.Url + ianvsContext.MatchedEndpoint.Url;
 
             await _next(context);
         }

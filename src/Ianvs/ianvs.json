@@ -16,6 +16,14 @@
         "summary": "Test operation",
         "description": "Simulates a GET operation and echoes back request details in the response body",
         "operationId": "getEcho",
+        "parameters": [
+          {
+            "name": "ianvs",
+            "in": "query",
+            "x-to": "query",
+            "description": "Sample query param to be forwarded"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Ping reply",

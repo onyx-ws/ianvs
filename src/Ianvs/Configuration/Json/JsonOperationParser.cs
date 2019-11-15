@@ -28,6 +28,7 @@ namespace Onyx.Ianvs.Configuration.Json
                 if (property.Name == "description") operation.Description = property.Value.GetString();
                 if (property.Name == "operationId") operation.OperationId = property.Value.GetString();
                 if (property.Name == "servers") operation.Servers = JsonServerParser.Parse(property.Value);
+                if (property.Name == "parameters") operation.Parameters = JsonParameterParser.Parse(property.Value);
             }
             return operation;
         }

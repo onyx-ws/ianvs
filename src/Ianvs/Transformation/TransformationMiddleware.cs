@@ -21,11 +21,11 @@ namespace Onyx.Ianvs.Transformation
             // TODO: Implement Transformation
             // https://github.com/onyx-ws/ianvs/issues/10
 
-            ianvsContext.DownstreamRequest = new DownstreamMessage();
+            ianvsContext.BackendMessage = new BackendMessage();
 
             await _next(httpContext);
 
-            ianvsContext.Response = ianvsContext.DownstreamResponse.Content;
+            ianvsContext.Response = ianvsContext.BackendResponse.Content;
         }
     }
 }

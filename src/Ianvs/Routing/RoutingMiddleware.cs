@@ -36,7 +36,8 @@ namespace Onyx.Ianvs.Routing
             {
                 // Path not found
                 // Return 404 - Not Found (https://tools.ietf.org/html/rfc7231#section-6.5.4)
-                await httpContext.Response.WriteNotFoundResponseAsync();
+                ianvsContext.StatusCode = 404;
+                ianvsContext.Response = "";
             }
             else
             {
@@ -51,7 +52,8 @@ namespace Onyx.Ianvs.Routing
                 {
                     // Operation not found
                     // Return 405 - Method Not Allowed (https://tools.ietf.org/html/rfc7231#section-6.5.5)
-                    await httpContext.Response.WriteMethodNotAllowedResponseAsync();
+                    ianvsContext.StatusCode = 405;
+                    ianvsContext.Response = "";
                 }
                 else
                 {

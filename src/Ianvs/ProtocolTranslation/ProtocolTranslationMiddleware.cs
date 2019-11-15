@@ -19,13 +19,7 @@ namespace Onyx.Ianvs.ProtocolTranslation
 
         public async Task InvokeAsync(HttpContext context, IanvsContext ianvsContext)
         {
-            // TODO: Implement Protocol Translation - e.g. REST to gRPC
-            // https://github.com/onyx-ws/ianvs/issues/11
-
-            ianvsContext.Dispatcher = new HttpDispatcher() as IDispatcher;
-            ianvsContext.DownstreamRequest.Message = ianvsContext.Dispatcher.PrepareRequest(ianvsContext);
             await _next(context);
-            ianvsContext.Dispatcher.ProcessResponse(ianvsContext);
         }
     }
 }

@@ -36,5 +36,10 @@ namespace Onyx.Ianvs.Common
         /// An alternative server array to service this operation. If an alternative server object is specified at the Path Item Object or Root level, it will be overridden by this value
         /// </summary>
         public List<Server> Servers { get; set; }
+
+        /// <summary>
+        /// A list of parameters that are applicable for this operation. If a parameter is already defined at the Path Item, the new definition will override it but can never remove it
+        /// </summary>
+        public List<Parameter> Parameters { get; set; }
     }
 }

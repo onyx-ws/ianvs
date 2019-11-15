@@ -17,6 +17,11 @@ namespace Onyx.Ianvs.Common
         public string Url { get; set; }
 
         /// <summary>
+        /// The backend endpoint protocol (HTTP, gRPC, etc.) Default is HTTP
+        /// </summary>
+        public string Protocol { get; set; } = "HTTP";
+
+        /// <summary>
         /// The virtual endpoint relative path. If not defined, endpoint Url is used as virtual Url
         /// </summary>
         public string IanvsUrl { get; set; }
