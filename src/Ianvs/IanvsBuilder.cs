@@ -23,7 +23,6 @@ namespace Onyx.Ianvs
             app.UseMiddleware<IngressMiddleware>();
             app.UseMiddleware<RoutingMiddleware>();
             app.UseMiddleware<TransformationMiddleware>();
-            app.UseMiddleware<ProtocolTranslationMiddleware>();
             app.UseMiddleware<LoadBalancingMiddleware>();
             app.UseMiddleware<EgressMiddleware>();
             return app;
