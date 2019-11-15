@@ -41,7 +41,7 @@ namespace Onyx.Ianvs.Egress
 
             backendTimer.Stop();
 
-            _logger.LogInformation($"Backend operation '{ianvsContext.MatchedOperation.OperationId}' respnse received in {backendTimer.ElapsedMilliseconds} milliseconds");
+            _logger.LogInformation($"Backend operation '{ianvsContext.MatchedOperation.OperationId}' response received in {backendTimer.ElapsedMilliseconds}ms");
 
             ianvsContext.BackendResponse = new BackendMessage()
             {

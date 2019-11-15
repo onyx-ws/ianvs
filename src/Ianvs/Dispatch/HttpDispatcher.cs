@@ -24,24 +24,6 @@ namespace Onyx.Ianvs.Dispatch
                         AllowAutoRedirect = false
                     }
                 );
-                string targetUrl = $"{ianvsContext.TargetUrl}?";
-                foreach (var parameter in ianvsContext.MatchedOperation.Parameters)
-                {
-                    parameter.To ??= parameter.In;
-                    if (parameter.To == "query")
-                    {
-                        if(ianvsContext.Variables.TryGetValue($"{{request.query.{parameter.Name}}}", out string value)){
-                            targetUrl += $"{parameter.Name}={value}&";
-                        }
-                        else if (parameter.Default != null)
-                        {
-                            targetUrl += $"{parameter.Name}={parameter.Default}&";
-                        }
-                    }
-                }
-                // Remove last character - either ? or &
-                targetUrl = targetUrl.Remove(targetUrl.Length - 1, 1);
-                client.BaseAddress = new Uri(targetUrl);
                 HttpRequestMessage downstreamMsg = ianvsContext.BackendMessage.Message;
                 return await client.SendAsync(downstreamMsg);
             }
@@ -53,9 +35,29 @@ namespace Onyx.Ianvs.Dispatch
 
         public object PrepareRequest(IanvsContext ianvsContext)
         {
+            string targetUrl = $"{ianvsContext.TargetUrl}?";
+            foreach (var parameter in ianvsContext.MatchedOperation.Parameters)
+            {
+                parameter.To ??= parameter.In;
+                if (parameter.To == "query")
+                {
+                    if (ianvsContext.Variables.TryGetValue($"{{request.query.{parameter.Name}}}", out string value))
+                    {
+                        targetUrl += $"{parameter.Name}={value}&";
+                    }
+                    else if (parameter.Default != null)
+                    {
+                        targetUrl += $"{parameter.Name}={parameter.Default}&";
+                    }
+                }
+            }
+            // Remove last character - either ? or &
+            targetUrl = targetUrl.Remove(targetUrl.Length - 1, 1);
+
             HttpRequestMessage downstreamMsg = new HttpRequestMessage
             {
-                Method = new HttpMethod(ianvsContext.MatchedOperation.Method)
+                Method = new HttpMethod(ianvsContext.MatchedOperation.Method),
+                RequestUri = new Uri(targetUrl)
             };
             return downstreamMsg;
         }

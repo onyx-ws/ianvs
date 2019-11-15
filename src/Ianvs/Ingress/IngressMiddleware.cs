@@ -71,13 +71,15 @@ namespace Onyx.Ianvs.Ingress
             {
                 ianvsTimer.Stop();
                 ianvsContext.ProcessingCompletedAt = DateTimeOffset.UtcNow;
-                _logger.LogInformation($"Response for {ianvsContext.RequestId} received by client at {ianvsContext.ProcessingCompletedAt}. Processing took {ianvsTimer.ElapsedMilliseconds}");
+                _logger.LogInformation($"Response for {ianvsContext.RequestId} received by client at {ianvsContext.ProcessingCompletedAt}");
+                _logger.LogInformation($"Response for {ianvsContext.RequestId} completed in {ianvsTimer.ElapsedMilliseconds}ms");
             });
 
             ianvsContext.ProcessingTime = ianvsTimer.ElapsedMilliseconds;
             ianvsContext.ResponseSentAt = DateTimeOffset.UtcNow;
             httpContext.Response.StatusCode = ianvsContext.StatusCode;
-            _logger.LogInformation($"Response for {ianvsContext.RequestId} being sent at {ianvsContext.ResponseSentAt}. Processing took {ianvsContext.ProcessingTime}");
+            _logger.LogInformation($"Response for {ianvsContext.RequestId} being sent at {ianvsContext.ResponseSentAt}.");
+            _logger.LogInformation($"Response for {ianvsContext.RequestId} processing took {ianvsContext.ProcessingTime}ms");
 
             await httpContext.Response.WriteAsync(ianvsContext.Response);
         }
