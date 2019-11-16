@@ -25,33 +25,80 @@ namespace Onyx.Ianvs.Ingress
 
         public async Task InvokeAsync(HttpContext httpContext, IanvsContext ianvsContext)
         {
-            // TODO: Implement Ingress operations
-            // 1. Promote request variables
-            // 2.? 
-            Stopwatch ianvsTimer = new Stopwatch();
-            ianvsTimer.Start();
-
-            ianvsContext.ReceivedAt = DateTimeOffset.UtcNow;
-            ianvsContext.RequestId = httpContext.TraceIdentifier;
-            ianvsContext.Url = httpContext.Request.GetDisplayUrl();
-            ianvsContext.Method = httpContext.Request.Method;
-            ianvsContext.Protocol = httpContext.Request.Protocol;
-
-            _logger.LogInformation($"Request {ianvsContext.RequestId} recieved at {ianvsContext.ReceivedAt}");
-
-            if (httpContext.Request.Headers.TryGetValue("x-ianvs-trackid", out StringValues trackId))
+            try
             {
-                ianvsContext.TrackId = trackId.ToString();
-            }
-            else
-            {
-                ianvsContext.TrackId = Guid.NewGuid().ToString();
-            }
+                // TODO: Implement Ingress operations
+                Stopwatch ianvsTimer = new Stopwatch();
+                ianvsTimer.Start();
 
+                ianvsContext.ReceivedAt = DateTimeOffset.UtcNow;
+                ianvsContext.RequestId = httpContext.TraceIdentifier;
+                ianvsContext.Url = httpContext.Request.GetDisplayUrl();
+                ianvsContext.Method = httpContext.Request.Method;
+                ianvsContext.Protocol = httpContext.Request.Protocol;
+
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request starting {ianvsContext.Protocol} {ianvsContext.Method} {ianvsContext.Url}");
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request recieved at {ianvsContext.ReceivedAt}");
+
+                if (httpContext.Request.Headers.TryGetValue("x-ianvs-trackid", out StringValues trackId))
+                {
+                    ianvsContext.TrackId = trackId.ToString();
+                }
+                else
+                {
+                    ianvsContext.TrackId = Guid.NewGuid().ToString();
+                }
+
+                PromoteVariables(httpContext, ianvsContext);
+
+                // When response is starting capture and log time Ianvs took to process
+                httpContext.Response.OnStarting(async () =>
+                {
+                    ianvsContext.ProcessingTime = ianvsTimer.ElapsedMilliseconds;
+                    ianvsContext.ResponseSentAt = DateTimeOffset.UtcNow;
+                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Response being sent at {ianvsContext.ResponseSentAt}.");
+                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Processing took {ianvsContext.ProcessingTime}ms");
+                });
+
+                // When response is completed (i.e. Received by client) capture and log time it took
+                httpContext.Response.OnCompleted(async () =>
+                {
+                    ianvsTimer.Stop();
+                    ianvsContext.ProcessingCompletedAt = DateTimeOffset.UtcNow;
+                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Response received by client at {ianvsContext.ProcessingCompletedAt}");
+                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request finished in {ianvsTimer.ElapsedMilliseconds}ms {httpContext.Response.StatusCode}");
+                });
+                
+                await _next(httpContext);
+
+                httpContext.Response.StatusCode = ianvsContext.StatusCode;
+                await httpContext.Response.WriteAsync(ianvsContext.Response);
+            }
+            catch(Exception e)
+            {
+                // Ok, something wrong happened - call the SWAT team
+                _logger.LogError($"{Environment.MachineName} {ianvsContext.RequestId} Error occured processing request");
+                _logger.LogError($"{Environment.MachineName} {ianvsContext.RequestId} Error: {e.ToString()}");
+                
+                ianvsContext.ResponseSentAt = DateTimeOffset.UtcNow;
+                ianvsContext.StatusCode = 500;
+                httpContext.Response.StatusCode = ianvsContext.StatusCode;
+
+                await httpContext.Response.WriteAsync(string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Promote request context variables to be used in variable swap operations
+        /// </summary>
+        /// <param name="httpContext">The incoming HTTP context</param>
+        /// <param name="ianvsContext">The Ianvs processing context</param>
+        public void PromoteVariables(HttpContext httpContext, IanvsContext ianvsContext)
+        {
             ianvsContext.Variables = new Dictionary<string, string>();
             if (httpContext.Request.Body != null && httpContext.Request.Body.CanRead)
             {
-                ianvsContext.IncomingRequest = await httpContext.Request.ReadAsStringAsync();
+                ianvsContext.IncomingRequest = httpContext.Request.ReadAsStringAsync().Result;
                 ianvsContext.Variables.TryAdd("{request.body}", ianvsContext.IncomingRequest);
                 ianvsContext.Variables.TryAdd("{request.header.content-Type}", httpContext.Request.ContentType);
                 if (httpContext.Request.ContentLength.HasValue)
@@ -63,29 +110,7 @@ namespace Onyx.Ianvs.Ingress
                     ianvsContext.Variables.TryAdd("{request.header.content-Length}", ianvsContext.IncomingRequest.Length.ToString());
                 }
             }
-            PromoteVariables(httpContext, ianvsContext);
 
-            await _next(httpContext);
-
-            httpContext.Response.OnCompleted(async () =>
-            {
-                ianvsTimer.Stop();
-                ianvsContext.ProcessingCompletedAt = DateTimeOffset.UtcNow;
-                _logger.LogInformation($"Response for {ianvsContext.RequestId} received by client at {ianvsContext.ProcessingCompletedAt}");
-                _logger.LogInformation($"Response for {ianvsContext.RequestId} completed in {ianvsTimer.ElapsedMilliseconds}ms");
-            });
-
-            ianvsContext.ProcessingTime = ianvsTimer.ElapsedMilliseconds;
-            ianvsContext.ResponseSentAt = DateTimeOffset.UtcNow;
-            httpContext.Response.StatusCode = ianvsContext.StatusCode;
-            _logger.LogInformation($"Response for {ianvsContext.RequestId} being sent at {ianvsContext.ResponseSentAt}.");
-            _logger.LogInformation($"Response for {ianvsContext.RequestId} processing took {ianvsContext.ProcessingTime}ms");
-
-            await httpContext.Response.WriteAsync(ianvsContext.Response);
-        }
-
-        public void PromoteVariables(HttpContext httpContext, IanvsContext ianvsContext)
-        {
             foreach (var header in httpContext.Request.Headers)
             {
                 ianvsContext.Variables.TryAdd($"{{request.header.{header.Key}}}", header.Value.ToString());

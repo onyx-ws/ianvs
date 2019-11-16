@@ -13,11 +13,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using Onyx.Ianvs.Configuration.Store;
 using Onyx.Ianvs.Transformation;
+using Onyx.Ianvs.Dispatch;
 
 namespace Onyx.Ianvs
 {
+    /// <summary>
+    /// Builds Ianvs application and adds components to ASP.NET runtime
+    /// </summary>
     public static class IanvsBuilder
     {
+        /// <summary>
+        /// Builds Ianvs middleware processing chain
+        /// </summary>
+        /// <param name="app"></param>
+        /// <returns></returns>
         public static IApplicationBuilder UseIanvs(this IApplicationBuilder app)
         {
             app.UseMiddleware<IngressMiddleware>();
@@ -28,6 +37,10 @@ namespace Onyx.Ianvs
             return app;
         }
 
+        /// <summary>
+        /// Adds Ianvs application services
+        /// </summary>
+        /// <param name="services"></param>
         public static void AddIanvs(this IServiceCollection services)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
@@ -36,6 +49,8 @@ namespace Onyx.Ianvs
             
             services.TryAddSingleton<IIanvsConfigurationStore, IanvsFileConfigurationStore>();
             services.TryAddSingleton<RandomLoadBalancer>();
+            services.TryAddSingleton<DispatcherFactory>();
+            services.TryAddSingleton<HttpDispatcher>();
         }
     }
 }

@@ -1,23 +1,26 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Onyx.Ianvs.Common;
 using Onyx.Ianvs.Configuration.Store;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Onyx.Ianvs.LoadBalancing
 {
+    /// <summary>
+    /// Responsible for balancing load on backend servers
+    /// </summary>
     public class LoadBalancingMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger _logger;
 
-        public LoadBalancingMiddleware(RequestDelegate next, IServiceProvider serviceProvider)
+        public LoadBalancingMiddleware(RequestDelegate next, IServiceProvider serviceProvider, ILogger<LoadBalancingMiddleware> logger)
         {
             _next = next;
             _serviceProvider = serviceProvider;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context, IanvsContext ianvsContext,
@@ -27,22 +30,31 @@ namespace Onyx.Ianvs.LoadBalancing
             // WIP - https://github.com/onyx-ws/ianvs/issues/5
 
             // TODO: Implement support for different load balancing modes - Random/Round Robin/etc.
-            ILoadBalancer loadBalancer = GetLoadBalancer("random");
-            
+            _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} finding load balancer");
+            string loadBalancerMode = "random";
+            ILoadBalancer loadBalancer = GetLoadBalancer(loadBalancerMode);
+            _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} {loadBalancerMode} load balancer found");
+
             // Operation level servers take priority
-            if(!(ianvsContext.MatchedOperation.Servers?.Count == 0))
+            if (!(ianvsContext.MatchedOperation.Servers?.Count == 0))
             {
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Selecting 1 from {ianvsContext.MatchedOperation.Servers.Count} server(s)");
                 ianvsContext.TargetServer = await loadBalancer.Next(ianvsContext.MatchedOperation.Servers);
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Server {ianvsContext.TargetServer.Url} selected");
             }
             // If not operation level servers then use Endpoint level servers
             else if (!(ianvsContext.MatchedEndpoint.Servers?.Count == 0))
             {
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Selecting 1 from {ianvsContext.MatchedEndpoint.Servers.Count} server(s)");
                 ianvsContext.TargetServer = await loadBalancer.Next(ianvsContext.MatchedEndpoint.Servers);
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Server {ianvsContext.TargetServer.Url} selected");
             }
             // Else use global servers defined
             else
             {
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Selecting 1 from {ianvsConfiguration.Servers.Count} server(s)");
                 ianvsContext.TargetServer = await loadBalancer.Next(ianvsConfiguration.Servers);
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Server {ianvsContext.TargetServer.Url} selected");
             }
 
             ianvsContext.TargetUrl = ianvsContext.TargetServer.Url + ianvsContext.MatchedEndpoint.Url;

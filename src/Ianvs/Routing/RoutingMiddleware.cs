@@ -6,16 +6,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Onyx.Ianvs.Configuration.Store;
+using Microsoft.Extensions.Logging;
 
 namespace Onyx.Ianvs.Routing
 {
+    /// <summary>
+    /// Responsible for matching incoming request to a defined backend API
+    /// </summary>
     public class RoutingMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger _logger;
 
-        public RoutingMiddleware(RequestDelegate next)
+        public RoutingMiddleware(RequestDelegate next, ILogger<RoutingMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext httpContext, Ianvs::IanvsContext ianvsContext,
@@ -28,6 +34,7 @@ namespace Onyx.Ianvs.Routing
 
             // Find a matching Path
             string requestPath = httpContext.Request.Path;
+            _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Looking for a configured route");
             Ianvs::Endpoint matchedEndpoint = ianvsConfiguration.Endpoints.FirstOrDefault(
                 endpoint =>
                     requestPath == (!string.IsNullOrWhiteSpace(endpoint.IanvsUrl) ? endpoint.IanvsUrl : endpoint.Url)
@@ -36,22 +43,26 @@ namespace Onyx.Ianvs.Routing
             {
                 // Path not found
                 // Return 404 - Not Found (https://tools.ietf.org/html/rfc7231#section-6.5.4)
+                _logger.LogWarning($"{Environment.MachineName} {ianvsContext.RequestId} No configured route found");
                 ianvsContext.StatusCode = 404;
                 ianvsContext.Response = "";
             }
             else
             {
                 ianvsContext.MatchedEndpoint = matchedEndpoint;
+                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Possible matching route found at {ianvsContext.MatchedEndpoint.Url}");
+                
                 // Path found - Match Operation
                 string requestMethod = httpContext.Request.Method;
                 Ianvs::Operation matchedOperation = matchedEndpoint.Operations.FirstOrDefault(
-                    operation => 
+                    operation =>
                         operation.Method.Equals(requestMethod, StringComparison.InvariantCultureIgnoreCase)
                 );
                 if (matchedOperation is null)
                 {
                     // Operation not found
                     // Return 405 - Method Not Allowed (https://tools.ietf.org/html/rfc7231#section-6.5.5)
+                    _logger.LogWarning($"{Environment.MachineName} {ianvsContext.RequestId} No configured operation found");
                     ianvsContext.StatusCode = 405;
                     ianvsContext.Response = "";
                 }
@@ -60,6 +71,7 @@ namespace Onyx.Ianvs.Routing
                     // Operation found
                     // Simulate operation
                     ianvsContext.MatchedOperation = matchedOperation;
+                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Matched route at {ianvsContext.MatchedOperation.OperationId} {ianvsContext.MatchedOperation.Method} {ianvsContext.MatchedEndpoint.Url}");
 
                     await _next(httpContext);
                 }

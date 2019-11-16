@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Onyx.Ianvs.Transformation
 {
+    /// <summary>
+    /// Responsible for performing request/response transformations
+    /// </summary>
     public class TransformationMiddleware
     {
         private readonly RequestDelegate _next;
