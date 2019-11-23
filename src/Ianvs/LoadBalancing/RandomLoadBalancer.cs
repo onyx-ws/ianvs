@@ -28,7 +28,7 @@ namespace Onyx.Ianvs.LoadBalancing
                 return Task.FromResult<Server>(servers[0]);
             }
 
-            int serverNumber = new Random().Next(1, servers.Count);
+            int serverNumber = new Random().Next(1, servers.Count + 1);
             return Task.FromResult<Server>(servers[serverNumber - 1]);
         }
     }
