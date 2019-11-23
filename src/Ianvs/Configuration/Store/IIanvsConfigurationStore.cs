@@ -22,5 +22,10 @@ namespace Onyx.Ianvs.Configuration.Store
         /// List of backend servers configured
         /// </summary>
         List<Server> Servers { get; set; }
+
+        /// <summary>
+        /// The default load balancer mode used to select the server to service operations. Default is random
+        /// </summary>
+        public string LoadBalancerMethod { get; set; }
     }
 }

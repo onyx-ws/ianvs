@@ -39,6 +39,15 @@ namespace Onyx.Ianvs.Configuration.Store
             set { }
         }
 
+        /// <summary>
+        /// The default load balancer mode used to select the server to service operations. Default is random
+        /// </summary>
+        public string LoadBalancerMethod
+        {
+            get { return ianvsConfiguration.LoadBalancerMethod; }
+            set { }
+        }
+
         public IanvsFileConfigurationStore()
         {
             string data = File.ReadAllText("./ianvs.json");

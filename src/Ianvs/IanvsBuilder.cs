@@ -48,6 +48,7 @@ namespace Onyx.Ianvs
             services.TryAddScoped<IanvsContext>();
             
             services.TryAddSingleton<IIanvsConfigurationStore, IanvsFileConfigurationStore>();
+            services.TryAddSingleton<LoadBalancerFactory>();
             services.TryAddSingleton<RandomLoadBalancer>();
             services.TryAddSingleton<DispatcherFactory>();
             services.TryAddSingleton<HttpDispatcher>();

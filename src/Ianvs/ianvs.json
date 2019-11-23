@@ -53,8 +53,13 @@
           {
             "url": "https://httpbin.org",
             "description": "httpbin server"
+          },
+          {
+            "url": "http://httpbin.org",
+            "description": "httpbin server"
           }
-        ]
+        ],
+        "x-ianvs-lb-method": "random"
       }
     }
   }

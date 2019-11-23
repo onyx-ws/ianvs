@@ -40,6 +40,7 @@ namespace Onyx.Ianvs.Configuration.Json
                 if (property.Name == "head") endpoint.Operations.Add(JsonOperationParser.Parse(property));
                 if (property.Name == "patch") endpoint.Operations.Add(JsonOperationParser.Parse(property));
                 if (property.Name == "trace") endpoint.Operations.Add(JsonOperationParser.Parse(property));
+                if (property.Name == IanvsMeta.E_CONFIG_LOAD_BALANCER_METHOD) endpoint.LoadBalancerMethod = property.Value.ToString();
             }
 
             return endpoint;

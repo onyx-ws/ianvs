@@ -22,5 +22,6 @@ namespace Onyx.Ianvs.Configuration
         public const string E_CONFIG_PATHS = "paths";
 
         public const string E_CONFIG_VIRTUAL_ENDPOINT = "x-ianvs-endpoint";
+        public const string E_CONFIG_LOAD_BALANCER_METHOD = "x-ianvs-lb-method";
     }
 }

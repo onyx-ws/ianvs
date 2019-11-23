@@ -51,6 +51,11 @@ namespace Onyx.Ianvs.Configuration.Json
                 // https://github.com/onyx-ws/ianvs/issues/3
             }
 
+            if (jIanvs.TryGetProperty(IanvsMeta.E_CONFIG_LOAD_BALANCER_METHOD, out JsonElement jLoadBalancerMethod))
+            {
+                ianvs.LoadBalancerMethod = jLoadBalancerMethod.ToString();
+            }
+
             return ianvs;
         }
     }
