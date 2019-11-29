@@ -66,7 +66,7 @@ namespace Onyx.Ianvs.LoadBalancing
                 _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Server {ianvsContext.TargetServer.Url} selected");
             }
 
-            ianvsContext.TargetUrl = ianvsContext.TargetServer.Url + ianvsContext.MatchedEndpoint.Url;
+            ianvsContext.TargetUrl = ianvsContext.TargetServer.Url + (ianvsContext.MatchedEndpoint.Url == "/" ? "" : ianvsContext.MatchedEndpoint.Url);
 
             await _next(context);
         }

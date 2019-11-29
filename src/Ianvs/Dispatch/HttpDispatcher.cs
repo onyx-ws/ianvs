@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Onyx.Ianvs.Dispatch
@@ -83,6 +84,14 @@ namespace Onyx.Ianvs.Dispatch
                 Method = new HttpMethod(ianvsContext.MatchedOperation.Method),
                 RequestUri = new Uri(targetUrl)
             };
+            if (!string.IsNullOrWhiteSpace(ianvsContext.IncomingRequest))
+            {
+                downstreamMsg.Content = new StringContent(
+                    ianvsContext.IncomingRequest,
+                    Encoding.UTF8,
+                    ianvsContext.Variables.GetValueOrDefault("{request.header.content-Type}", "application/json")
+                );
+            }
             return downstreamMsg;
         }
 

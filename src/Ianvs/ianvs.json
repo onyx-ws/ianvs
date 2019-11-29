@@ -6,7 +6,7 @@
     "version": "0.0.1"
   },
   "paths": {
-    "/get": {
+    "/": {
       "x-ianvs-endpoint": "/echo",
       "get": {
         "tags": [
@@ -51,15 +51,63 @@
         },
         "servers": [
           {
-            "url": "https://httpbin.org",
+            "url": "https://httpbin.org/get",
             "description": "httpbin server"
           },
           {
-            "url": "http://httpbin.org",
+            "url": "http://httpbin.org/get",
             "description": "httpbin server"
           }
         ],
         "x-ianvs-lb-method": "random"
+      },
+      "post": {
+        "tags": [
+          "onyx",
+          "ianvs"
+        ],
+        "summary": "Test operation",
+        "description": "Simulates a GET operation and echoes back request details in the response body",
+        "operationId": "getEcho",
+        "parameters": [
+          {
+            "name": "ianvs",
+            "in": "query",
+            "x-to": "query",
+            "description": "Sample query param to be forwarded"
+          },
+          {
+            "name": "me",
+            "in": "query",
+            "description": "Sample query param to be forwarded",
+            "x-default": "test"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ping reply",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "reply-1": {
+                    "summary": "Hello World Example",
+                    "value": "{ \"message\": \"Hello World Coded!\" }"
+                  },
+                  "reply-2": {
+                    "summary": "Hello World Example",
+                    "externalValue": "https://raw.githubusercontent.com/onyx-ws/tanuki/master/src/Tanuki/tanuki.json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "servers": [
+          {
+            "url": "https://httpbin.org/post",
+            "description": "httpbin server"
+          }
+        ]
       }
     }
   }
