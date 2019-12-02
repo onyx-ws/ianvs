@@ -14,6 +14,8 @@ using System.Threading.Tasks;
 using Onyx.Ianvs.Configuration.Store;
 using Onyx.Ianvs.Transformation;
 using Onyx.Ianvs.Dispatch;
+using Onyx.Ianvs.Security;
+using Onyx.Ianvs.Security.Jwt;
 
 namespace Onyx.Ianvs
 {
@@ -31,6 +33,7 @@ namespace Onyx.Ianvs
         {
             app.UseMiddleware<IngressMiddleware>();
             app.UseMiddleware<RoutingMiddleware>();
+            app.UseMiddleware<SecurityMiddleware>();
             app.UseMiddleware<TransformationMiddleware>();
             app.UseMiddleware<LoadBalancingMiddleware>();
             app.UseMiddleware<EgressMiddleware>();
@@ -44,14 +47,38 @@ namespace Onyx.Ianvs
         public static void AddIanvs(this IServiceCollection services)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
+            // Add Core services
+            AddIanvsCore(services);
+            // Add Authentication services
+            AddIanvsAuthentication(services);
+            // Add Load balancing services
+            AddIanvsLoadBalancing(services);
+            // Add Egress services
+            AddIanvsEgress(services);
+        }
 
+        private static void AddIanvsCore(IServiceCollection services)
+        {
             services.TryAddScoped<IanvsContext>();
-            
             services.TryAddSingleton<IIanvsConfigurationStore, IanvsFileConfigurationStore>();
-            services.TryAddSingleton<LoadBalancerFactory>();
-            services.TryAddSingleton<RandomLoadBalancer>();
+        }
+
+        private static void AddIanvsEgress(IServiceCollection services)
+        {
             services.TryAddSingleton<DispatcherFactory>();
             services.TryAddSingleton<HttpDispatcher>();
+        }
+
+        private static void AddIanvsAuthentication(IServiceCollection services)
+        {
+            services.TryAddSingleton<AuthenticatorFactory>();
+            services.TryAddSingleton<JwtAuthenticationHandler>();
+        }
+
+        private static void AddIanvsLoadBalancing(IServiceCollection services)
+        {
+            services.TryAddSingleton<LoadBalancerFactory>();
+            services.TryAddSingleton<RandomLoadBalancer>();
         }
     }
 }

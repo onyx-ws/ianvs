@@ -49,13 +49,18 @@
             }
           }
         },
+        "security": [
+          {
+            "jwt_auth": [ "profile" ]
+          }
+        ],
         "servers": [
           {
-            "url": "https://httpbin.org/get",
+            "url": "http://httpbin/get",
             "description": "httpbin server"
           },
           {
-            "url": "http://httpbin.org/get",
+            "url": "http://httpbin/get",
             "description": "httpbin server"
           }
         ],
@@ -104,10 +109,22 @@
         },
         "servers": [
           {
-            "url": "https://httpbin.org/post",
+            "url": "http://httpbin/post",
             "description": "httpbin server"
           }
         ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "jwt_auth": {
+        "type": "http",
+        "in": "header",
+        "scheme": "bearer",
+        "bearerFormat": "bearer",
+        "openIdConnectUrl": "http://keycloak_master:8080/auth/realms/master/.well-known/openid-configuration",
+        "x-audience": [ "account" ]
       }
     }
   }

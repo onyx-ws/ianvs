@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Onyx.Ianvs.Dispatch;
+using System.Security.Claims;
 
 namespace Onyx.Ianvs.Common
 {
@@ -31,5 +32,9 @@ namespace Onyx.Ianvs.Common
         public int StatusCode { get; internal set; } = 200;
         public string TrackId { get; set; }
         public long ProcessingTime { get; internal set; }
+        public SecurityScheme SecurityScheme { get; internal set; }
+        public List<SecurityRequirement> Security { get; set; }
+        public SecurityRequirement SecurityRequirement { get; internal set; }
+        public ClaimsPrincipal Principal { get; internal set; }
     }
 }

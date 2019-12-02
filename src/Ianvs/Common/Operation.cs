@@ -46,5 +46,10 @@ namespace Onyx.Ianvs.Common
         /// A list of parameters that are applicable for this operation. If a parameter is already defined at the Path Item, the new definition will override it but can never remove it
         /// </summary>
         public List<Parameter> Parameters { get; set; }
+
+        /// <summary>
+        /// The list of security schemes used to secure the operation
+        /// </summary>
+        public List<SecurityRequirement> Security { get; set; }
     }
 }

@@ -56,6 +56,14 @@ namespace Onyx.Ianvs.Configuration.Json
                 ianvs.LoadBalancerMethod = jLoadBalancerMethod.ToString();
             }
 
+            if (jIanvs.TryGetProperty(IanvsMeta.E_CONFIG_COMPONENTS, out JsonElement components))
+            {
+                if(components.TryGetProperty(IanvsMeta.E_CONFIG_SECURITY_SCHEMES, out JsonElement securitySchemes))
+                {
+                    ianvs.SecuritySchemes = JsonSecuritySchemeParser.Parse(securitySchemes);
+                }
+            }
+
             return ianvs;
         }
     }

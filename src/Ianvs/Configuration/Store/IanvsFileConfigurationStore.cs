@@ -48,6 +48,15 @@ namespace Onyx.Ianvs.Configuration.Store
             set { }
         }
 
+        /// <summary>
+        /// The list of defined security schemes
+        /// </summary>
+        public List<SecurityScheme> SecuritySchemes
+        {
+            get { return ianvsConfiguration.SecuritySchemes; }
+            set { }
+        }
+
         public IanvsFileConfigurationStore()
         {
             string data = File.ReadAllText("./ianvs.json");

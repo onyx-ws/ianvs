@@ -27,5 +27,10 @@ namespace Onyx.Ianvs.Configuration
         /// The default load balancer mode used to select the server to service operations. Default is random
         /// </summary>
         public string LoadBalancerMethod { get; set; } = "random";
+
+        /// <summary>
+        /// The list of defined security schemes
+        /// </summary>
+        public List<SecurityScheme> SecuritySchemes { get; set; }
     }
 }

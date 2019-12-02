@@ -50,5 +50,10 @@ namespace Onyx.Ianvs.Common
         /// An alternative random balancer mode used to select the server to service this endpoint. If a load balancer mode is specified at the Root level, it will be overridden by this value. If no mode is specified at any level, default is random
         /// </summary>
         public string LoadBalancerMethod { get; set; }
+
+        /// <summary>
+        /// The list of security schemes used to secure the operation
+        /// </summary>
+        public List<SecurityRequirement> Security { get; set; }
     }
 }
