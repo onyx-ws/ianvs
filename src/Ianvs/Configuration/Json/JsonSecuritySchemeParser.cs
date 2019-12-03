@@ -34,6 +34,7 @@ namespace Onyx.Ianvs.Configuration.Json
             {
                 if (property.Name == IanvsMeta.E_CONFIG_SEC_SCHEME_TYPE) scheme.Type = property.Value.GetString();
                 if (property.Name == IanvsMeta.E_CONFIG_SEC_SCHEME_IN) scheme.In = property.Value.GetString();
+                if (property.Name == IanvsMeta.E_CONFIG_SEC_SCHEME_BEARER_FORMAT) scheme.BearerFormat = property.Value.GetString();
                 if (property.Name == IanvsMeta.E_CONFIG_SEC_SCHEME_OPEN_ID_CONNECT_URL) scheme.OpenIdConnectUrl = property.Value.GetString();
                 if (property.Name == IanvsMeta.E_CONFIG_SEC_SCHEME_ISSUER) scheme.Issuer = property.Value.GetString();
                 if (property.Name == IanvsMeta.E_CONFIG_SEC_SCHEME_AUDIENCES)

@@ -29,6 +29,7 @@ namespace Onyx.Ianvs.Configuration
         public const string E_CONFIG_SECURITY_SCHEMES = "securitySchemes";
         public const string E_CONFIG_SEC_SCHEME_TYPE = "type";
         public const string E_CONFIG_SEC_SCHEME_IN = "in";
+        public const string E_CONFIG_SEC_SCHEME_BEARER_FORMAT = "bearerFormat";
         public const string E_CONFIG_SEC_SCHEME_OPEN_ID_CONNECT_URL = "openIdConnectUrl";
         public const string E_CONFIG_SEC_SCHEME_ISSUER = "x-issuer";
         public const string E_CONFIG_SEC_SCHEME_AUDIENCES = "x-audience";

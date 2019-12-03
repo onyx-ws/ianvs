@@ -142,7 +142,7 @@ namespace Onyx.Ianvs.Security.Jwt
             return tokenIn switch
             {
                 "header" => GetTokenFromHeader(httpContext),
-                "cookie" => GetTokenFromCookie(httpContext, ""),
+                "cookie" => GetTokenFromCookie(httpContext, ianvsContext.SecurityScheme.BearerFormat),
                 _ => GetTokenFromHeader(httpContext)
             };
         }
@@ -155,7 +155,11 @@ namespace Onyx.Ianvs.Security.Jwt
         /// <returns>The encoded token value</returns>
         private string GetTokenFromCookie(HttpContext httpContext, string name)
         {
-            throw new NotImplementedException();
+            if(httpContext.Request.Cookies.TryGetValue(name, out string token))
+            {
+                return token;
+            }
+            return null;
         }
 
         /// <summary>
