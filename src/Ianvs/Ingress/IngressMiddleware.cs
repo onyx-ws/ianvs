@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Onyx.Ianvs.Common;
 using Onyx.Ianvs.Http;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Trace.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,68 +25,75 @@ namespace Onyx.Ianvs.Ingress
             _logger = logger;
         }
 
-        public async Task InvokeAsync(HttpContext httpContext, IanvsContext ianvsContext)
+        public async Task InvokeAsync(HttpContext httpContext, IanvsContext ianvsContext, Tracer tracer)
         {
-            try
+            using (tracer.StartActiveSpan("ianvs-ingress", SpanKind.Server, out ISpan ianvsSpan))
             {
-                // TODO: Implement Ingress operations
-                Stopwatch ianvsTimer = new Stopwatch();
-                ianvsTimer.Start();
+                ianvsContext.TraceSpan = ianvsSpan;
+                ianvsContext.Tracer = tracer;
 
-                ianvsContext.ReceivedAt = DateTimeOffset.UtcNow;
-                ianvsContext.RequestId = httpContext.TraceIdentifier;
-                ianvsContext.Url = httpContext.Request.GetDisplayUrl();
-                ianvsContext.Method = httpContext.Request.Method;
-                ianvsContext.Protocol = httpContext.Request.Protocol;
-
-                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request starting {ianvsContext.Protocol} {ianvsContext.Method} {ianvsContext.Url}");
-                _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request recieved at {ianvsContext.ReceivedAt}");
-
-                if (httpContext.Request.Headers.TryGetValue("x-ianvs-trackid", out StringValues trackId))
+                try
                 {
-                    ianvsContext.TrackId = trackId.ToString();
+                    // TODO: Implement Ingress operations
+                    Stopwatch ianvsTimer = new Stopwatch();
+                    ianvsTimer.Start();
+
+                    ianvsContext.ReceivedAt = DateTimeOffset.UtcNow;
+                    ianvsContext.RequestId = httpContext.TraceIdentifier;
+                    ianvsContext.Url = httpContext.Request.GetDisplayUrl();
+                    ianvsContext.Method = httpContext.Request.Method;
+                    ianvsContext.Protocol = httpContext.Request.Protocol;
+
+                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request starting {ianvsContext.Protocol} {ianvsContext.Method} {ianvsContext.Url}");
+                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request recieved at {ianvsContext.ReceivedAt}");
+
+                    if (httpContext.Request.Headers.TryGetValue("x-ianvs-trackid", out StringValues trackId))
+                    {
+                        ianvsContext.TrackId = trackId.ToString();
+                    }
+                    else
+                    {
+                        ianvsContext.TrackId = Guid.NewGuid().ToString();
+                    }
+
+                    PromoteVariables(httpContext, ianvsContext);
+
+                    // When response is starting capture and log time Ianvs took to process
+                    httpContext.Response.OnStarting(async () =>
+                    {
+                        ianvsContext.ProcessingTime = ianvsTimer.ElapsedMilliseconds;
+                        ianvsContext.ResponseSentAt = DateTimeOffset.UtcNow;
+                        _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Response being sent at {ianvsContext.ResponseSentAt}.");
+                        _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Processing took {ianvsContext.ProcessingTime}ms");
+                    });
+
+                    // When response is completed (i.e. Received by client) capture and log time it took
+                    httpContext.Response.OnCompleted(async () =>
+                    {
+                        ianvsTimer.Stop();
+                        ianvsContext.ProcessingCompletedAt = DateTimeOffset.UtcNow;
+                        _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Response received by client at {ianvsContext.ProcessingCompletedAt}");
+                        _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request finished in {ianvsTimer.ElapsedMilliseconds}ms {httpContext.Response.StatusCode}");
+                    });
+
+                    await _next(httpContext);
+
+                    httpContext.Response.StatusCode = ianvsContext.StatusCode;
+                    await httpContext.Response.WriteAsync(ianvsContext.Response);
                 }
-                else
-                {
-                    ianvsContext.TrackId = Guid.NewGuid().ToString();
-                }
 
-                PromoteVariables(httpContext, ianvsContext);
-
-                // When response is starting capture and log time Ianvs took to process
-                httpContext.Response.OnStarting(async () =>
+                catch (Exception e)
                 {
-                    ianvsContext.ProcessingTime = ianvsTimer.ElapsedMilliseconds;
+                    // Ok, something wrong happened - call the SWAT team
+                    _logger.LogError($"{Environment.MachineName} {ianvsContext.RequestId} Error occured processing request");
+                    _logger.LogError($"{Environment.MachineName} {ianvsContext.RequestId} Error: {e.ToString()}");
+
                     ianvsContext.ResponseSentAt = DateTimeOffset.UtcNow;
-                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Response being sent at {ianvsContext.ResponseSentAt}.");
-                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Processing took {ianvsContext.ProcessingTime}ms");
-                });
+                    ianvsContext.StatusCode = 500;
+                    httpContext.Response.StatusCode = ianvsContext.StatusCode;
 
-                // When response is completed (i.e. Received by client) capture and log time it took
-                httpContext.Response.OnCompleted(async () =>
-                {
-                    ianvsTimer.Stop();
-                    ianvsContext.ProcessingCompletedAt = DateTimeOffset.UtcNow;
-                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Response received by client at {ianvsContext.ProcessingCompletedAt}");
-                    _logger.LogInformation($"{Environment.MachineName} {ianvsContext.RequestId} Request finished in {ianvsTimer.ElapsedMilliseconds}ms {httpContext.Response.StatusCode}");
-                });
-                
-                await _next(httpContext);
-
-                httpContext.Response.StatusCode = ianvsContext.StatusCode;
-                await httpContext.Response.WriteAsync(ianvsContext.Response);
-            }
-            catch(Exception e)
-            {
-                // Ok, something wrong happened - call the SWAT team
-                _logger.LogError($"{Environment.MachineName} {ianvsContext.RequestId} Error occured processing request");
-                _logger.LogError($"{Environment.MachineName} {ianvsContext.RequestId} Error: {e.ToString()}");
-                
-                ianvsContext.ResponseSentAt = DateTimeOffset.UtcNow;
-                ianvsContext.StatusCode = 500;
-                httpContext.Response.StatusCode = ianvsContext.StatusCode;
-
-                await httpContext.Response.WriteAsync(string.Empty);
+                    await httpContext.Response.WriteAsync(string.Empty);
+                }
             }
         }
 

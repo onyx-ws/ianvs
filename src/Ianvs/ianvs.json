@@ -49,11 +49,6 @@
             }
           }
         },
-        "security": [
-          {
-            "jwt_auth": [ "profile" ]
-          }
-        ],
         "servers": [
           {
             "url": "http://httpbin/get",

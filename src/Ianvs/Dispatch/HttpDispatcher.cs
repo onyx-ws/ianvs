@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Onyx.Ianvs.Common;
 using Onyx.Ianvs.Http;
+using OpenTelemetry.Trace;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -58,7 +58,7 @@ namespace Onyx.Ianvs.Dispatch
         /// </summary>
         /// <param name="ianvsContext">Ianvs processing context</param>
         /// <returns>The HTTP request message to send to the backend</returns>
-        public object PrepareRequest(IanvsContext ianvsContext)
+        public object PrepareRequest(IanvsContext ianvsContext, ISpan egressSpan)
         {
             string targetUrl = $"{ianvsContext.TargetUrl}?";
             foreach (var parameter in ianvsContext.MatchedOperation.Parameters)
@@ -91,6 +91,13 @@ namespace Onyx.Ianvs.Dispatch
                     Encoding.UTF8,
                     ianvsContext.Variables.GetValueOrDefault("{request.header.content-Type}", "application/json")
                 );
+            }
+            if (egressSpan.Context.IsValid)
+            {
+                ianvsContext.Tracer.TextFormat.Inject(
+                    egressSpan.Context,
+                    downstreamMsg.Headers,
+                    (headers, name, value) => headers.Add(name, value));
             }
             return downstreamMsg;
         }

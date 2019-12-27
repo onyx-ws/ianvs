@@ -16,6 +16,11 @@ using Onyx.Ianvs.Transformation;
 using Onyx.Ianvs.Dispatch;
 using Onyx.Ianvs.Security;
 using Onyx.Ianvs.Security.Jwt;
+using OpenTelemetry.Hosting;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace.Configuration;
+using OpenTelemetry.Trace.Samplers;
+using OpenTelemetry.Trace;
 
 namespace Onyx.Ianvs
 {
@@ -55,6 +60,8 @@ namespace Onyx.Ianvs
             AddIanvsLoadBalancing(services);
             // Add Egress services
             AddIanvsEgress(services);
+            // Add Telemtry
+            AddTelemetry(services);
         }
 
         private static void AddIanvsCore(IServiceCollection services)
@@ -79,6 +86,27 @@ namespace Onyx.Ianvs
         {
             services.TryAddSingleton<LoadBalancerFactory>();
             services.TryAddSingleton<RandomLoadBalancer>();
+        }
+
+        private static void AddTelemetry(IServiceCollection services)
+        {
+            services.AddOpenTelemetry(builder =>
+            {
+                builder
+                    .SetSampler(new AlwaysSampleSampler())
+                    // Once otelcol is out of alpha, switch to it and remove the Jaeger exporter
+                    // https://github.com/open-telemetry/opentelemetry-collector
+                    .UseJaeger(o =>
+                    {
+                        o.ServiceName = "ianvs-gateway";
+                        o.AgentHost = Environment.GetEnvironmentVariable("JAEGER_AGENT_HOST");
+                    })
+                    .AddRequestCollector()
+                    .SetResource(new Resource(new Dictionary<string, object>() { { "service.name", "ianvs-gateway" } }));
+            });
+
+            TracerFactory tracerFactory = services.BuildServiceProvider().GetService<TracerFactory>();
+            services.AddSingleton(tracerFactory.GetTracer("ianvs-gateway"));
         }
     }
 }

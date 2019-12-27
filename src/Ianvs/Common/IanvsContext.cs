@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Onyx.Ianvs.Dispatch;
 using System.Security.Claims;
+using OpenTelemetry.Trace;
 
 namespace Onyx.Ianvs.Common
 {
@@ -16,7 +17,6 @@ namespace Onyx.Ianvs.Common
         public string Method { get; set; }
         public string Protocol { get; set; }
         public DateTimeOffset ReceivedAt { get; internal set; }
-
         public Ianvs::Endpoint MatchedEndpoint { get; internal set; }
         public Ianvs::Operation MatchedOperation { get; internal set; }
         public Ianvs::Server TargetServer { get; internal set; }
@@ -36,5 +36,7 @@ namespace Onyx.Ianvs.Common
         public List<SecurityRequirement> Security { get; set; }
         public SecurityRequirement SecurityRequirement { get; internal set; }
         public ClaimsPrincipal Principal { get; internal set; }
+        public ISpan TraceSpan { get; set; }
+        public Tracer Tracer { get; set; }
     }
 }
